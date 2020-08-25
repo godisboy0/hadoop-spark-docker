@@ -1,0 +1,38 @@
+# hadoop有了
+FROM ubuntu:18.04
+# DEBIAN_FRONTEND=noninteractive 使得整个安装没有任何交互，适用于dockerfile
+RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install tzdata language-pack-zh-hans software-properties-common openssh-server openssh-client rsync -y && locale-gen zh_CN.UTF-8 && apt-get clean && apt-get autoclean
+COPY hadoop-2.6.5 /usr/local/hadoop-2.6.5
+COPY jdk-1.8.0_231 /usr/local/jdk-1.8.0
+COPY scala-2.11.12 /usr/local/scala-2.11.12
+COPY spark-2.3.0-bin-without-hadoop /usr/local/spark-2.3.0
+# ssh首次登陆时不会有废话询问
+RUN mkdir /run/sshd && echo 'StrictHostKeyChecking no' >> /etc/ssh/ssh_config
+COPY authorized_keys /root/.ssh/authorized_keys
+
+# 中文支持
+ENV LANG="zh_CN.UTF-8"
+
+ENV JAVA_HOME="/usr/local/jdk-1.8.0"
+ENV JRE_HOME=${JAVA_HOME}/jre
+ENV CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
+ENV PATH=${JAVA_HOME}/bin:$PATH
+
+ENV SCALA_HOME="/usr/local/scala-2.11.12"
+ENV PATH=${SCALA_HOME}/bin:$PATH
+
+ENV HADOOP_PREFIX="/usr/local/hadoop-2.6.5"
+ENV HADOOP_HOME=${HADOOP_PREFIX}
+ENV PATH=$PATH:$HADOOP_PREFIX/bin
+ENV PATH=$PATH:$HADOOP_PREFIX/sbin
+ENV HADOOP_MAPRED_HOME=${HADOOP_PREFIX}
+ENV HADOOP_COMMON_HOME=${HADOOP_PREFIX}
+ENV HADOOP_HDFS_HOME=${HADOOP_PREFIX}
+ENV YARN_HOME=${HADOOP_PREFIX}
+
+# 确保spark能找到hadoop的本地库
+ENV LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
+
+COPY entry-point-data.sh /root/entry-point.sh
+RUN chmod +x /root/entry-point.sh && ln -s /usr/bin/python3 /usr/bin/python && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENTRYPOINT [ "/root/entry-point.sh" ]

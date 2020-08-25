@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  master:
+    image: ubuntu-hadoop:namenode
+    hostname: master
+    networks:
+      - hadoop-test
+    volumes:
+      - /Users/mateng/dockerVolume/hadoop/namenode:/hdfs/name
+    ports:
+      - "50070:50070"
+      - "8020:8020"
+      - "8088:8088"
+      - "8089:8080"
+      - "7077:7077"
+      - "18080:18080"
+      - "9000:9000"
+
+  slave01:
+    image: ubuntu-hadoop:datanode
+    hostname: slave01
+    networks:
+      - hadoop-test
+    volumes:
+      - /Users/mateng/dockerVolume/hadoop/slave01:/hdfs/data
+    environment:
+      SERVICE_PRECONDITION: "master:50070"
+    ports:
+      - "50075:50075"
+      - "50010:50010"
+
+  slave02:
+    image: ubuntu-hadoop:datanode
+    hostname: slave02
+    networks:
+      - hadoop-test
+    volumes:
+      - /Users/mateng/dockerVolume/hadoop/slave02:/hdfs/data
+    environment:
+      SERVICE_PRECONDITION: "master:50070"
+    ports:
+      - "50076:50076"
+      - "50011:50011"
+
+networks:
+  hadoop-test:
+    external:
+      name: hadoop-test
