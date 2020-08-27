@@ -383,6 +383,21 @@
    docker-compose log -f
    ```
 
-9. 最后我把这些东西都放到github上去了
+9. 本地测试代码
+
+   要知道我们的代码最终是提交到集群上运行，所以涉及到url的部分都需要格外注意。假如我们已经放了一些数据在hdfs上。我们在宿主机上写代码如下：
+   
+   ```python
+   from pyspark.sql import SparkSession
+   
+   spark = SparkSession.builder.appName("test cluster").master("spark://master:7077").config(
+       "spark.debug.maxToStringFields", "70").getOrCreate()
+   df = spark.read.option("encoding","utf-8").csv("hdfs://master:9000/test/movie_info.csv",sep=",",inferSchema="true", header='true')
+   df.show()
+   # 如果使用127.0.0.1:7077 或者 127.0.0.1:9000，则提交到集群上后因为ip问题而出错。
+   # 所以为了让master解析到127.0.0.1，我们还需要在/etc/hosts文件中添加一条记录 127.0.0.1 master
+   ```
+   
+10. 最后我把这些东西都放到github上去了，但是几个下载的软件包里我只保留了修改后的配置文件，正经bin文件请大家自行下载。
 
    [github: hadoop-docker](https://github.com/godisboy0/hadoop-spark-docker)
